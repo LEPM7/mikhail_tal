@@ -1,0 +1,32 @@
+
+service: apiCalls
+
+provider:
+  name: aws
+  stackName: ${file(vars.yml):stack-name}
+  apiName: ${file(vars.yml):stack-name}
+  region: ${file(vars.yml):aws-region}
+  logRetentionInDays: 90
+  runtime: python3.6
+  endpointType: regional
+  role: arn:aws:iam::032233938113:role/apiGatewayRole
+
+package:
+  exclude:
+    - ./**
+  include:
+    - lambdas/**
+
+functions:
+
+  get_emergency:
+    handler: lambdas/emergency.get_emergency
+    timeout: 10
+    environment:
+      REGION:  ${file(vars.yml):aws-region}
+      DYNAMODB_TABLE:  ${file(vars.yml):dynamodb-table}
+    events:
+      - http:
+          path: emergency
+          method: get
+          integration: lambda

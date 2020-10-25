@@ -1,0 +1,13 @@
+component: aws-dynamodb 
+name: emergency-api          
+stage: dev 
+
+inputs:
+  name: Emergency
+  attributeDefinitions:
+    - AttributeName: id
+      AttributeType: N
+  keySchema:
+    - AttributeName: id
+      KeyType: HASH
+  region: us-east-1
