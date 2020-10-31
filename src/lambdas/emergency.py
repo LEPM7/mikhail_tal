@@ -1,36 +1,62 @@
 import os
 import json
 import boto3
-from urllib.parse import parse_qs
+from boto3.dynamodb.conditions import Key
 
-import sys
-sys.path.insert(0, 'lambdas/')
-
-def get_emergency(event, context):
+def get_all_emergency(event, context):
     REGION                  = os.environ["AWS_REGION"]
     DYNAMODB_TABLE          = os.environ["DYNAMODB_TABLE"]
-    
     dynamodb = boto3.resource('dynamodb',region_name=REGION)
     table = dynamodb.Table(DYNAMODB_TABLE)
-    items = []
-    for item in table.scan()["Items"]:
-        dict = {}
-        dict["id"]=str(item["id"])
-        dict["latitude"]=str(item["latitude"])
-        dict["longitude"]=str(item["longitude"])
-        dict["fireStation"]=str(item["fireStation"])
-        dict["contactPhone"]=str(item["contactPhone"])
-        dict["ambulance"]=str(item["ambulance"])
-        dict["state"]=str(item["state"])
-        items.append(dict)
+    return table.scan()["Items"]
 
-    return {
-        'statusCode': 200,
-        'body': json.dumps(items)
-    }
+def get_emergency_by_status(event, context):
+    REGION                  = os.environ["AWS_REGION"]
+    DYNAMODB_TABLE          = os.environ["DYNAMODB_TABLE"]
+    dynamodb = boto3.resource('dynamodb',region_name=REGION)
+    table = dynamodb.Table(DYNAMODB_TABLE)
+    status= str(event["path"]["status"])
+    return table.query(
+        Select='ALL_ATTRIBUTES',
+        Limit=100,
+        ConsistentRead=True,
+        ReturnConsumedCapacity='NONE',
+        KeyConditionExpression=Key('state').eq(status)
+    )["Items"]
+
+def get_emergency_by_id(event, context):
+    REGION                  = os.environ["AWS_REGION"]
+    DYNAMODB_TABLE          = os.environ["DYNAMODB_TABLE"]
+    dynamodb = boto3.resource('dynamodb',region_name=REGION)
+    table = dynamodb.Table(DYNAMODB_TABLE)
+    id= str(event["path"]["id"])
+    print(id)
+    return table.query(
+        Select='ALL_ATTRIBUTES',
+        Limit=100,
+        ConsistentRead=True,
+        ReturnConsumedCapacity='NONE',
+        KeyConditionExpression=Key('state').eq("PENDING") & Key('id').eq(int(id)) 
+    )["Items"][0]
+
+def add_emergency(event, context):
+    REGION                  = os.environ["AWS_REGION"]
+    DYNAMODB_TABLE          = os.environ["DYNAMODB_TABLE"]
+    dynamodb = boto3.client('dynamodb',region_name=REGION)
+    return dynamodb.put_item(
+        TableName=DYNAMODB_TABLE,
+        Item={
+            'state': {
+                'S': 'PENDING'
+            },
+            'id': {
+                'N': str(10)
+            }
+        }
+    )
 
 # LOCAL TESTING
 # export AWS_REGION=us-east-1
 # export AWS_PROFILE=trambo
 # export DYNAMODB_TABLE=Emergency
-# print(get_emergency({"postBody" : "test"},""))
+# print(get_emergency_by_status({"postBody" : "test"},""))

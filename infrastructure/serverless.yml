@@ -7,7 +7,11 @@ inputs:
   attributeDefinitions:
     - AttributeName: id
       AttributeType: N
+    - AttributeName: state
+      AttributeType: S
   keySchema:
-    - AttributeName: id
+    - AttributeName: state
       KeyType: HASH
+    - AttributeName: id
+      KeyType: RANGE
   region: us-east-1

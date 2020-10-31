@@ -19,8 +19,8 @@ package:
 
 functions:
 
-  get_emergency:
-    handler: lambdas/emergency.get_emergency
+  get_all_emergency:
+    handler: lambdas/emergency.get_all_emergency
     timeout: 10
     environment:
       REGION:  ${file(vars.yml):aws-region}
@@ -30,3 +30,54 @@ functions:
           path: emergency
           method: get
           integration: lambda
+          cors: true
+
+  get_emergency_by_status:
+    handler: lambdas/emergency.get_emergency_by_status
+    timeout: 10
+    environment:
+      REGION:  ${file(vars.yml):aws-region}
+      DYNAMODB_TABLE:  ${file(vars.yml):dynamodb-table}
+    events:
+      - http:
+          path: emergency/status/{status}
+          request:
+            parameters:
+              paths:
+                status: true
+          method: get
+          integration: lambda
+          cors: true
+
+  get_emergency_by_id:
+    handler: lambdas/emergency.get_emergency_by_id
+    timeout: 10
+    environment:
+      REGION:  ${file(vars.yml):aws-region}
+      DYNAMODB_TABLE:  ${file(vars.yml):dynamodb-table}
+    events:
+      - http:
+          path: emergency/{id}
+          request:
+            parameters:
+              paths:
+                id: true
+          method: get
+          integration: lambda
+          cors: true
+
+  add_emergency:
+    handler: lambdas/emergency.add_emergency
+    timeout: 10
+    environment:
+      REGION:  ${file(vars.yml):aws-region}
+      DYNAMODB_TABLE:  ${file(vars.yml):dynamodb-table}
+    events:
+      - http:
+          path: emergency
+          method: post
+          integration: lambda
+          cors: true
+
+
+
